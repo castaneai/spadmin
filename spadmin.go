@@ -14,7 +14,8 @@ type client struct {
 }
 
 // NewClient creates new spadmin client for Cloud Spanner
-// dsn format: '/projects/<GCP_PROJECT_ID>/instances/<SPANNER_INSTANCE_ID>'
+// dsn format: 'projects/<GCP_PROJECT_ID>/instances/<SPANNER_INSTANCE_ID>'
+// @see https://cloud.google.com/spanner/docs/reference/rpc/google.spanner.admin.database.v1#google.spanner.admin.database.v1.CreateDatabaseMetadata
 func NewClient(dsn string) (*client, error) {
 	return &client{
 		dsn: dsn,
