@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	testDatabaseName = "test-db"
+	testDatabaseName = "spadmin_test"
 )
 
 func TestCreateDatabase(t *testing.T) {
@@ -18,34 +18,34 @@ func TestCreateDatabase(t *testing.T) {
 
 	c, err := NewClient(dsn)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	ctx := context.Background()
 	defer (func() {
 		err := c.DropDatabase(ctx, testDatabaseName)
 		if err != nil {
-			t.Error(err)
+			t.Fatal(err)
 		}
 	})()
 
 	if err := c.CreateDatabase(ctx, testDatabaseName, nil); err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	iexists, err := c.DatabaseExists(ctx, "invalid-db")
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if iexists {
-		t.Error("db: 'invalid-db' must be not found, but found")
+		t.Fatal("db: 'invalid-db' must be not found, but found")
 	}
 
 	exists, err := c.DatabaseExists(ctx, testDatabaseName)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if !exists {
-		t.Errorf("db: '%s' must exists", testDatabaseName)
+		t.Fatalf("db: '%s' must exists", testDatabaseName)
 	}
 }
