@@ -16,12 +16,12 @@ func TestCreateDatabase(t *testing.T) {
 		t.Skip("env not set: SPADMIN_SPANNER_DSN")
 	}
 
-	c, err := NewClient(dsn)
+	ctx := context.Background()
+	c, err := NewClient(ctx, dsn)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	ctx := context.Background()
 	defer (func() {
 		err := c.DropDatabase(ctx, testDatabaseName)
 		if err != nil {
