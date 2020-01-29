@@ -4,6 +4,12 @@ import (
 	"context"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"google.golang.org/api/option"
+
+	"github.com/gcpug/handy-spanner/fake"
 )
 
 const (
@@ -22,30 +28,89 @@ func TestCreateDatabase(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	defer (func() {
-		err := c.DropDatabase(ctx, testDatabaseName)
+	// invalid database not found
+	{
+		exists, err := c.DatabaseExists(ctx, "invalid-db")
 		if err != nil {
 			t.Fatal(err)
 		}
-	})()
-
-	if err := c.CreateDatabase(ctx, testDatabaseName, nil); err != nil {
-		t.Fatal(err)
+		assert.False(t, exists)
 	}
 
-	iexists, err := c.DatabaseExists(ctx, "invalid-db")
+	// create database & database exists
+	{
+		if err := c.CreateDatabase(ctx, testDatabaseName, nil); err != nil {
+			t.Fatal(err)
+		}
+		exists, err := c.DatabaseExists(ctx, testDatabaseName)
+		if err != nil {
+			t.Fatal(err)
+		}
+		assert.True(t, exists)
+	}
+
+	// drop database
+	{
+		if err := c.DropDatabase(ctx, testDatabaseName); err != nil {
+			t.Fatal(err)
+		}
+		exists, err := c.DatabaseExists(ctx, testDatabaseName)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if exists {
+			t.Fatalf("db: '%s' expected not found, but found", testDatabaseName)
+		}
+	}
+}
+
+func TestCreateDatabaseWithHandySpanner(t *testing.T) {
+	dsn := "projects/fake/instances/fake"
+	srv, conn, err := fake.Run()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if iexists {
-		t.Fatal("db: 'invalid-db' must be not found, but found")
-	}
+	srv.Addr()
+	defer srv.Stop()
 
-	exists, err := c.DatabaseExists(ctx, testDatabaseName)
+	ctx := context.Background()
+	c, err := NewClient(ctx, dsn, option.WithGRPCConn(conn))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !exists {
-		t.Fatalf("db: '%s' must exists", testDatabaseName)
+
+	// invalid database not found
+	{
+		exists, err := c.DatabaseExists(ctx, "invalid-db")
+		if err != nil {
+			t.Fatal(err)
+		}
+		assert.False(t, exists)
+	}
+
+	// create database & database exists
+	{
+		if err := c.CreateDatabase(ctx, testDatabaseName, nil); err != nil {
+			t.Fatal(err)
+		}
+		exists, err := c.DatabaseExists(ctx, testDatabaseName)
+		if err != nil {
+			t.Fatal(err)
+		}
+		assert.True(t, exists)
+	}
+
+	// drop database
+	{
+		if err := c.DropDatabase(ctx, testDatabaseName); err != nil {
+			t.Fatal(err)
+		}
+		exists, err := c.DatabaseExists(ctx, testDatabaseName)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if exists {
+			t.Fatalf("db: '%s' expected not found, but found", testDatabaseName)
+		}
 	}
 }
